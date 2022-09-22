@@ -145,11 +145,41 @@ class Raytracer(object):
             reflectColor = self.cast_ray(intersect.point, reflect, intersect.sceneObj, recursion + 1)
             reflectColor = np.array(reflectColor)
 
+
             specColor = np.array([0,0,0])
             for light in self.lights:
                 specColor = np.add(specColor, light.getSpecColor(intersect, self))
 
             finalColor = reflectColor + specColor
+
+        elif material.matType == TRANSPARENT:
+            outside = np.dot(dir, intersect.normal)<0
+            bias=intersect.normal * 0.001
+
+            specColor = np.array([0,0,0])
+            for light in self.lights:
+                specColor = np.add(specColor, light.getSpecColor(intersect, self))
+
+            reflect = reflectVector(intersect.normal, np.array(dir)*-1)
+
+
+            reflectOrig=np.add(intersect.point, bias) if outside else np.subtract(intersect.point, bias)
+            reflectColor = self.cast_ray(reflectOrig, reflect, None, recursion + 1)
+            reflectColor = np.array(reflectColor)
+
+            kr=fresnel(intersect.normal, dir, material.ior)
+
+            
+            refractColor = np.array([0,0,0])
+
+            if kr<1:
+                #calculo9 refraccion
+                refract = refractVector(intersect.normal , dir, material.ior)
+                refractOrig= np.subtract(intersect.point, bias) if outside else np.add(intersect.point, bias)
+                refractColor = self.cast_ray(refractOrig,refract,None, recursion +1)
+                refractColor = np.array(refractColor)
+
+            finalColor = reflectColor * kr + refractColor *(1-kr) + specColor
 
         finalColor *= objectColor
 
