@@ -5,6 +5,7 @@ from figures import *
 from lights import *
 from math import cos, sin, tan, pi
 from obj import Obj
+import matesRS
 
 
 STEPS = 1
@@ -125,10 +126,10 @@ class Raytracer(object):
 
         material = intersect.sceneObj.material
 
-        finalColor = np.array([0,0,0])
-        objectColor = np.array([material.diffuse[0],
+        finalColor = [0,0,0]
+        objectColor = [material.diffuse[0],
                                 material.diffuse[1],
-                                material.diffuse[2]])
+                                material.diffuse[2]]
 
         if material.matType == OPAQUE:
             for light in self.lights:
@@ -145,7 +146,6 @@ class Raytracer(object):
             reflectColor = self.cast_ray(intersect.point, reflect, intersect.sceneObj, recursion + 1)
             reflectColor = np.array(reflectColor)
 
-
             specColor = np.array([0,0,0])
             for light in self.lights:
                 specColor = np.add(specColor, light.getSpecColor(intersect, self))
@@ -153,35 +153,35 @@ class Raytracer(object):
             finalColor = reflectColor + specColor
 
         elif material.matType == TRANSPARENT:
-            outside = np.dot(dir, intersect.normal)<0
+            outside = matesRS.dot(dir, intersect.normal)<0
             bias=intersect.normal * 0.001
 
-            specColor = np.array([0,0,0])
+            specColor = [0,0,0]
             for light in self.lights:
-                specColor = np.add(specColor, light.getSpecColor(intersect, self))
+                specColor = matesRS.add(specColor, light.getSpecColor(intersect, self))
 
             reflect = reflectVector(intersect.normal, np.array(dir)*-1)
 
 
-            reflectOrig=np.add(intersect.point, bias) if outside else np.subtract(intersect.point, bias)
+            reflectOrig=matesRS.add(intersect.point, bias) if outside else matesRS.subtract(intersect.point, bias)
             reflectColor = self.cast_ray(reflectOrig, reflect, None, recursion + 1)
             reflectColor = np.array(reflectColor)
 
             kr=fresnel(intersect.normal, dir, material.ior)
 
             
-            refractColor = np.array([0,0,0])
+            refractColor = [0,0,0]
 
             if kr<1:
                 #calculo9 refraccion
                 refract = refractVector(intersect.normal , dir, material.ior)
-                refractOrig= np.subtract(intersect.point, bias) if outside else np.add(intersect.point, bias)
+                refractOrig= matesRS.subtract(intersect.point, bias) if outside else matesRS.add(intersect.point, bias)
                 refractColor = self.cast_ray(refractOrig,refract,None, recursion +1)
                 refractColor = np.array(refractColor)
 
             finalColor = reflectColor * kr + refractColor *(1-kr) + specColor
 
-        finalColor *= objectColor
+            finalColor *= objectColor
 
         r = min(1, finalColor[0])
         g = min(1, finalColor[1])
@@ -192,7 +192,7 @@ class Raytracer(object):
 
     def glRender(self):
         # Proyeccion
-        t = tan((self.fov * np.pi / 180) / 2) * self.nearPlane
+        t = tan((self.fov * 3.14159265359 / 180) / 2) * self.nearPlane
         r = t * self.vpWidth / self.vpHeight
 
         for y in range(self.vpY, self.vpY + self.vpHeight + 1, STEPS):
@@ -206,7 +206,7 @@ class Raytracer(object):
                 Py *= t
 
                 direction = V3(Px, Py, -self.nearPlane)
-                direction = direction / np.linalg.norm(direction)
+                direction = direction = direction / np.linalg.norm(direction)
 
                 rayColor = self.cast_ray(self.camPosition, direction)
 

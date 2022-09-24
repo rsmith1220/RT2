@@ -1,4 +1,5 @@
 import numpy as np
+import matesRS
 
 WHITE = (1,1,1)
 BLACK = (0,0,0)
@@ -30,8 +31,8 @@ class Sphere(object):
         self.material = material
 
     def ray_intersect(self, orig, dir):
-        L = np.subtract(self.center, orig)
-        tca = np.dot(L, dir)
+        L = matesRS.subtract(self.center, orig)
+        tca = matesRS.dot(L, dir)
         d = (np.linalg.norm(L) ** 2 - tca ** 2) ** 0.5
 
         if d > self.radius:
@@ -48,8 +49,8 @@ class Sphere(object):
             return None
         
         # P = O + t0 * D
-        P = np.add(orig, t0 * np.array(dir))
-        normal = np.subtract(P, self.center)
+        P = matesRS.add(orig, t0 * np.array(dir))
+        normal = matesRS.subtract(P, self.center)
         normal = normal / np.linalg.norm(normal)
 
         return Intersect(distance = t0,
